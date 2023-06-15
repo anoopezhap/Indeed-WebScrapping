@@ -1,0 +1,171 @@
+package indeed.PageObjects;
+
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.*;
+import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+
+import javax.print.DocFlavor;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+public class pages {
+    public WebDriver driver;
+
+    public  pages(WebDriver driver)
+    {
+        this.driver = driver;
+        PageFactory.initElements(driver,this);
+    }
+
+
+    @FindBy(id = "text-input-what")
+    WebElement jobTitle;
+
+    @FindBy(id ="text-input-where")
+    WebElement jobLocation;
+
+    @FindBy(xpath = "//button[@type=\"submit\"]")
+    WebElement search;
+
+    @FindBy(id ="filter-dateposted" )
+    WebElement filterByDataPosted;
+
+    @FindBy(xpath = "//a[text()='Last 3 days']")
+    WebElement selectDateFilter;
+
+    @FindBy(xpath ="//div[contains(@class,'metadataContainer')]//parent::td[@class=\"resultContent\"]//span[contains(@id,'jobTitle')]" )
+    List<WebElement> jobTitles;
+
+    @FindBy(xpath ="//div[contains(@class,'metadataContainer')]//preceding-sibling::div[contains(@class,'companyInfo')]//span[@class=\"companyName\"]" )
+    List<WebElement> companyNames;
+
+    @FindBy(xpath ="//div[contains(@class,'metadataContainer')]//preceding-sibling::div[contains(@class,'companyInfo')]//div[@class=\"companyLocation\"]" )
+    List<WebElement> locations;
+
+    @FindBy(xpath = "//div[contains(@class,'metadataContainer')]")
+    List<WebElement> metaDatas;
+
+    @FindBy(xpath = "//div[contains(@class,'metadataContainer')]//preceding::div[@class=\"job_seen_beacon\"]//span[@class=\"date\"]")
+    List<WebElement> postedDates;
+
+    @FindBy(xpath = "//div[contains(@class,'metadataContainer')]//parent::td[@class=\"resultContent\"]//a")
+    List<WebElement> jobLinks;
+
+    @FindBy(xpath ="//a[@data-testid=\"pagination-page-next\"]")
+    WebElement nextPage;
+
+
+    public void enterDetails(String title, String location)
+    {
+        jobTitle.sendKeys(title);
+        jobLocation.sendKeys(Keys.chord(Keys.CONTROL,"a",Keys.DELETE));
+        jobLocation.sendKeys(location);
+        search.click();
+    }
+
+    public int filterByDatePosted(String option)
+    {
+        filterByDataPosted.click();
+        filterByDataPosted.findElement(By.xpath("//a[text()="+option+"]")).click();
+        return jobTitles.size();
+    }
+
+    public void closePopup() throws InterruptedException
+    {
+        Actions action = new Actions(driver);
+        Thread.sleep(3000);
+        action.click().build().perform();
+
+    }
+
+    public String[][] getData(int size)
+    {
+        String data[][] = new String[size][6];
+        for (int i = 0; i < jobTitles.size() - 1; i++)
+        {
+                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", jobLinks.get(i));
+                data[i][0] = jobTitles.get(i).getText();
+                data[i][1] = companyNames.get(i).getText();
+                data[i][2] = locations.get(i).getText();
+                data[i][3] = metaDatas.get(i).getText();
+                data[i][4] = postedDates.get(i).getText();
+                data[i][5] = jobLinks.get(i).getAttribute("href");
+        }
+
+        return data;
+    }
+
+    public String[][] cleanData(String[][] data, int noOfRecords)
+    {
+        String newData[][] = new String[noOfRecords][6];
+        newData = Arrays.stream(data).map(String[]::clone).toArray(String[][]::new);
+
+
+        for(int i=0;i<data.length-1;i++)
+        {
+            String temp = data[i][4];
+            String data2 = temp.replace("\"","");
+            String input = data2.replace("\n"," ");
+            String split[] = input.split(" ");
+            LinkedHashSet<String> set = new LinkedHashSet<>();
+            for(String s : split)
+            {
+                set.add(s);
+            }
+            String a = set.toString();
+            String b = a.replace("[","").replace("]","").replace(",","");
+            newData[i][4] = b;
+
+//            String tempLink = data[i][5];
+//            String newLink = UrlShortener.urlShortener(tempLink);
+//            newData[i][5] = newLink;
+        }
+        return newData;
+
+    }
+
+    public void writeDataToExcel(String data[][]) throws IOException
+    {
+
+        XSSFWorkbook workbook = new XSSFWorkbook();
+        XSSFSheet sheet = workbook.createSheet("Scrapped Data");
+        String header[] = {"JOB TITLE","COMPANY","LOCATION" ,"KEY POINTS","POSTED DATE","LINK"};
+        XSSFCellStyle style1 =workbook.createCellStyle();
+        Font font = workbook.createFont();
+        font.setFontName("Courier New");
+        font.setBold(true);
+        font.setColor(HSSFColor.HSSFColorPredefined.BLACK.getIndex());
+        style1.setFont(font);
+        XSSFRow row = sheet.createRow(0);
+        for(int i=0;i<header.length;i++)
+        {
+            XSSFCell cell = row.createCell(i);
+            cell.setCellStyle(style1);
+            cell.setCellValue(header[i]);
+        }
+
+        int rowCount = 1;
+        int colCount=0;
+        for(String[] s : data)
+        {
+            XSSFRow rows = sheet.createRow(rowCount++);
+            for(String c : s)
+            {
+                XSSFCell cells = rows.createCell(colCount++);
+                cells.setCellValue(c);
+            }
+            colCount=0;
+        }
+        String filePath = System.getProperty("user.dir") + ".\\data.xlsx";
+        FileOutputStream fos = new FileOutputStream(filePath);
+        workbook.write(fos);
+    }
+}
