@@ -38,6 +38,9 @@ This will execute the project using data from config.properties file.
 mvn test -Dbrowser=chrome -DjobTitle=QA Engineer -DjobLocation=Oakville
 ```
 
+## Result
+After running the project you can find file named data.xlsx with the scrapped data.
+
 ## Contributing
 Contributions are welcome! If you find any issues or have suggestions for improvements, please open an issue or submit a pull request.
 
