@@ -1,5 +1,5 @@
 # Indeed Scraper - Java and Selenium
-This is a Java-based web scraping project that extracts job listing information from Indeed.ca using the Selenium framework. It allows you to scrape job listings from Indeed and gather data such as job titles, company names, locations, key points and job links. The data is stored in the form of .xlsx file.
+This is a Java-based web scraping project that extracts job listing information from Indeed.ca using the Selenium framework. It allows you to scrape job listings from Indeed and gather data such as job titles, company names, locations, key points and job links. The data is stored in the form of .xlsx file. The number of pages the project will scrape depends on number of available pages. You can dig into the code and make required changes if necessary.
 
 ## Prerequisites
 To use this framework, ensure you have the following installed:
