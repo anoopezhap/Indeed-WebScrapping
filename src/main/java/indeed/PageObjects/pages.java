@@ -12,6 +12,7 @@ import org.openqa.selenium.support.PageFactory;
 import javax.print.DocFlavor;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,6 +62,8 @@ public class pages {
 
     @FindBy(xpath ="//a[@data-testid=\"pagination-page-next\"]")
     WebElement nextPage;
+    @FindBy(xpath = "//nav[@role=\"navigation\"]//div")
+    List<WebElement> noOfPages;
 
 
     public void enterDetails(String title, String location)
@@ -88,19 +91,33 @@ public class pages {
 
     public String[][] getData(int size)
     {
-        String data[][] = new String[size][6];
-        for (int i = 0; i < jobTitles.size() - 1; i++)
-        {
+        int count =0;
+        ArrayList<ArrayList<String>> data = new ArrayList<>();
+        do {
+            for (int i = 0; i < jobTitles.size() - 1; i++) {
                 ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView();", jobLinks.get(i));
-                data[i][0] = jobTitles.get(i).getText();
-                data[i][1] = companyNames.get(i).getText();
-                data[i][2] = locations.get(i).getText();
-                data[i][3] = metaDatas.get(i).getText();
-                data[i][4] = postedDates.get(i).getText();
-                data[i][5] = jobLinks.get(i).getAttribute("href");
-        }
+                ArrayList<String> tempData = new ArrayList<>();
+                tempData.add(jobTitles.get(i).getText());
+                tempData.add(companyNames.get(i).getText());
+                tempData.add(locations.get(i).getText());
+                tempData.add( metaDatas.get(i).getText());
+                tempData.add(postedDates.get(i).getText());
+                tempData.add(jobLinks.get(i).getAttribute("href"));
+                data.add(tempData);
+            }
+            if (noOfPages.size() >= 5) {
+                nextPage.click();
+            }
+            count++;
+        }while (noOfPages.size()>0 && count<4 && nextPage.isDisplayed());
 
-        return data;
+        String newData[][] = new String[data.size()][6];
+        for (int i = 0; i < data.size(); i++) {
+            for (int j = 0; j < data.get(0).size(); j++) {
+                newData[i][j] = data.get(i).get(j);
+            }
+        }
+        return newData;
     }
 
     public String[][] cleanData(String[][] data, int noOfRecords)

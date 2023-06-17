@@ -40,7 +40,7 @@ public abstract class TestBase {
     public void loadPropertiesFile()
     {
         prop = new Properties();
-        File file = new File("C:\\Users\\anoop\\IdeaProjects\\IndeedWebScrapping\\src\\main\\java\\indeed\\Properties\\cofig.properties");
+        File file = new File("C:\\Users\\anoop\\IdeaProjects\\QAGURU\\Indeed-WebScrapping\\src\\main\\java\\indeed\\Properties\\cofig.properties");
         FileInputStream fis;
         try {
             fis = new FileInputStream(file);
